@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>demo</title>
+        <script src="jquery-3.5.1.min.js"></script>
+    <script type="text/javascript" src="echart.min.js"></script>
+    <script type="text/javascript" src="bmap.min.js"></script>
+    <script type="text/javascript" src="data-1599291019905-iGxGcDDJc.json"></script>
+        <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=WiXZnizBq6EkicVdAIcUoYer3AghQe5K"></script>
+</head>
+<body>
+        <div id='main' style='position:absolute;top:0;bottom:0;left:0;right: 10px;'/>
+    <script type="text/javascript">
+    var myChart = echarts.init(document.getElementById('main'));
+
+        function getXML(){
+                if(window.XMLHttpRequest){
+                        return new window.XMLHttpRequest()
+                }else{
+                        new window.ActiveXObject('Microsoft.XMLHTTP')
+                }
+        }
+
+        function getLocalTime(i) {
+                if (typeof i !== 'number') return;
+                var d = new Date();
+                var len = d.getTime();
+                var offset = d.getTimezoneOffset() * 60000;
+                var utcTime = len + offset;
+                return new Date(utcTime + 3600000 * i);
+        }
+
+        Date.prototype.Format = function(fmt){
+        var o = {
+                "M+" : this.getMonth()+1,                 //月份
+                "d+" : this.getDate(),                    //日
+                "h+" : this.getHours(),                   //小时
+                "m+" : this.getMinutes(),                 //分
+                "s+" : this.getSeconds(),                 //秒
+                "q+" : Math.floor((this.getMonth()+3)/3), //季度
+                "S"  : this.getMilliseconds()             //毫秒
+        };
+         if(/(y+)/.test(fmt))
+                fmt=fmt.replace(RegExp.$1, (this.getFullYear()+"").substr(4 - RegExp.$1.length));
+        for(var k in o)
+                if(new RegExp("("+ k +")").test(fmt))
+                        fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (("00"+ o[k]).substr((""+ o[k]).length)));
+        return fmt;
+        }
+        var xhr = getXML()
+        time = getLocalTime(8)
+        time.setMinutes(Math.round((time.getMinutes()-1)/10)*10-10)
+
+        xhr.open('GET','prediction/'+time.Format('yyyyMMdd-hhmm')+'.pred')
+        xhr.send(null)
+        xhr.onreadystatechange = function(){
+                if(xhr.readyState == 4 && xhr.status == 200){
+                        resp = xhr.responseText
+                        J_data = JSON.parse(resp)
+                        //console.log(resp)
+                        init_all(J_data)
+                        console.log(time.Format('yyyyMMdd-hhmm'))
+                }
+        }
+
+        function matchdata(osmroad, jd) {
+            var data = []
+            for (var i = 0; i < osmroad.length; i += 1) {
+                var rname = osmroad[i].name
+                var value = jd[rname]
+                var v = {}
+                v.coords = osmroad[i].coords
+                v.value = value
+                data.push(v)
+            }
+            return data
+        }
+
+        function init_all(j_data){
+        var data = matchdata(osmroad,j_data)
+
+        var option = {
+                title: {
+                text: "Real time speed map",
+                        left: 10,
+                        top: 10,
+                        extStyle: {
+                                color: 'rgba(18,89,147,1)',
+                                fontSize: 40
+                        }
+                },
+                visualMap: {
+            min: 0,
+            max: 80,
+            text: ['High', 'Low'],
+            realtime: false,
+            calculable: true,
+            seriesIndex: 0,
+            inRange: {
+                color: ['#9DCC42', '#FFFE03', '#F7941D', '#E9420E', '#FF0000']
+            }
+        },
+                bmap: {
+                        center: [114.17524800126938, 22.30957855171689],
+                        zoom: 12,
+                        roam: true,
+                        mapStyle: {
+                styleJson: [{
+                    'featureType': 'water',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#d1d1d1'
+                    }
+                }, {
+                    'featureType': 'land',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#f3f3f3'
+                    }
+                }, {
+                    'featureType': 'railway',
+                    'elementType': 'all',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'highway',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#fdfdfd'
+                    }
+                }, {
+                    'featureType': 'highway',
+                    'elementType': 'labels',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'arterial',
+                    'elementType': 'geometry',
+                    'stylers': {
+                        'color': '#fefefe'
+                    }
+                }, {
+                    'featureType': 'arterial',
+                    'elementType': 'geometry.fill',
+                    'stylers': {
+                        'color': '#fefefe'
+                    }
+                }, {
+                    'featureType': 'poi',
+                    'elementType': 'all',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'green',
+                    'elementType': 'all',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'subway',
+                    'elementType': 'all',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'manmade',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#d1d1d1'
+                    }
+                }, {
+                    'featureType': 'local',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#d1d1d1'
+                    }
+                }, {
+                    'featureType': 'arterial',
+                    'elementType': 'labels',
+                    'stylers': {
+                        'visibility': 'off'
+                    }
+                }, {
+                    'featureType': 'boundary',
+                    'elementType': 'all',
+                    'stylersb': {
+                        'color': '#fefefe'
+                    }
+                }, {
+                    'featureType': 'building',
+                    'elementType': 'all',
+                    'stylers': {
+                        'color': '#d1d1d1'
+                    }
+                }, {
+                    'featureType': 'label',
+                    'elementType': 'labels.text.fill',
+                    'stylers': {
+                        'color': '#999999'
+                    }
+                }]
+            }
+            },
+                series: [{
+                        type: 'lines',
+                        coordinateSystem: 'bmap',
+                        polyline: true,
+                        data: data,
+                        silent: true,
+                        lineStyle: {
+                        color: 'rgb(200, 35, 45)',
+                                opacity: 0.7,
+                                width: 2
+                        },
+                        progressiveThreshold: 500,
+                        progressive: 200
+        }]
+        }
+        myChart.setOption(option)
+
+                var bmap = myChart.getModel().getComponent('bmap').getBMap();
+                bmap.addControl(new BMap.MapTypeControl());
+                        bmap.enableScrollWheelZoom();
+                        bmap.enableInertialDragging();
+                        bmap.enableContinuousZoom();
+                        bmap.addControl(new BMap.NavigationControl());//平移缩放控件
+                        bmap.addControl(new BMap.ScaleControl());    //比例尺
+                        bmap.addControl(new BMap.OverviewMapControl());  //缩略地图
+        }
+
+</script>
+</body>
+</html>
